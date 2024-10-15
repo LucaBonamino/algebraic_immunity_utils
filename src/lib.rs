@@ -106,7 +106,7 @@ impl Matrix {
 }
 
 #[pyfunction]
-fn process_gf2_matrix_dynamic(mut x: Vec<Vec<u8>>) -> (Vec<Vec<u8>>, Vec<(usize, usize)>) {
+fn echelon_form_last_row(mut x: Vec<Vec<u8>>) -> (Vec<Vec<u8>>, Vec<(usize, usize)>) {
     let mut matrix = Matrix { elements: x };
     let (m, b) = matrix.echf_2();
     (m.elements, b)
@@ -121,7 +121,7 @@ fn sum_as_string(a: usize, b: usize) -> PyResult<String> {
 /// A Python module implemented in Rust.
 #[pymodule]
 fn algebraic_immunity_utils(m: &Bound<'_, PyModule>) -> PyResult<()> {
-    m.add_function(wrap_pyfunction!(process_gf2_matrix_dynamic, m)?)?;
+    m.add_function(wrap_pyfunction!(echelon_form_last_row, m)?)?;
     m.add_function(wrap_pyfunction!(sum_as_string, m)?)?;
     Ok(())
 }
