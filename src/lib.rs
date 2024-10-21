@@ -20,5 +20,6 @@ fn sum_as_string(a: usize, b: usize) -> PyResult<String> {
 fn algebraic_immunity_utils(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(echelon_form_last_row, m)?)?;
     m.add_function(wrap_pyfunction!(sum_as_string, m)?)?;
+    m.add_class::<matrix::Matrix>()?;
     Ok(())
 }

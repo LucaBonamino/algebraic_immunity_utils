@@ -1,13 +1,29 @@
+use pyo3::prelude::*;
+use pyo3::types::{PyAny, PyList};
+
+#[pyclass]
 #[derive(Debug, Clone)]
 pub struct Matrix {
     pub elements: Vec<Vec<u8>>,
 }
 
+#[pymethods]
 impl Matrix {
+    #[new]
     pub fn new(elements: Vec<Vec<u8>>) -> Self {
+
+        // Return the Matrix object
         Matrix { elements }
     }
 
+    pub fn __repr__(&self) -> String {
+        let rows: Vec<String> = self.elements
+            .iter()
+            .map(|row| format!("{:?}", row))
+            .collect();
+        format!("[{}]", rows.join(", "))
+    }
+    //
     fn nrows(&self) -> usize {
         self.elements.len()
     }
@@ -26,10 +42,6 @@ impl Matrix {
 
     fn get(&self, row: usize, col: usize) -> u8 {
         self.elements[row][col]
-    }
-
-    fn get_pivot(row: &Vec<u8>) -> Option<usize> {
-        row.iter().position(|&x| x == 1)
     }
 
     fn add_rows(&mut self, target: usize, source: usize) {
@@ -100,5 +112,11 @@ impl Matrix {
         }
 
         (m_copy, operations)
+    }
+}
+
+impl Matrix {
+    fn get_pivot(row: &Vec<u8>) -> Option<usize> {
+        row.iter().position(|&x| x == 1)
     }
 }
