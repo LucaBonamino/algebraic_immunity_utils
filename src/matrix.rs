@@ -144,9 +144,6 @@ impl Matrix {
         let mut free_columns: Vec<usize> = Vec::new();
         let mut row = 0;
 
-        println!("Starting kernel computation.");
-        println!("Matrix dimensions: {} rows, {} cols", rows, cols);
-
         // Identify pivot and free columns
         for j in 0..cols {
             if row < rows && self.elements[row][j] == 1 {
@@ -157,39 +154,27 @@ impl Matrix {
             }
         }
 
-        println!("Pivot columns: {:?}", pivots);
-        println!("Free columns: {:?}", free_columns);
-
         // Construct kernel basis vectors
         for &free_col in &free_columns {
             let mut kernel_vector = vec![0; cols];
             kernel_vector[free_col] = 1; // Set the free variable
 
-            println!("Constructing kernel vector for free column {}", free_col);
-
             // Compute dependent variables for each pivot column
-            for (i, &pivot_col) in pivots.iter().enumerate() {
+            for &pivot_col in pivots.iter().rev() {
                 let mut sum = 0;
-                println!("Row {}: Calculating for pivot column {}", i, pivot_col);
 
-                // Sum contributions from non-free columns (pivot columns) in the same row
-                for &free_col in &free_columns {
-                    println!(
-                        "Row {}, Free column {}: Adding matrix[{}][{}] = {}",
-                        i, free_col, i, free_col, self.elements[i][free_col]
-                    );
-                    sum ^= self.elements[i][free_col]; // XOR contributions from free columns
+                for col in (0..cols).rev(){
+                    if col != pivot_col {
+                        sum  = sum ^ self.elements[pivot_col][col] * kernel_vector[col]
+                    }
                 }
-                kernel_vector[pivot_col] = sum; // Assign the computed value to the pivot column
-                println!("Result for pivot column {}: {}", pivot_col, sum);
+
+                kernel_vector[pivot_col] = sum;
             }
 
-            println!("Constructed kernel vector: {:?}", kernel_vector);
 
             kernel_base.push(kernel_vector);
         }
-
-        println!("Kernel basis completed: {:?}", kernel_base);
 
         kernel_base
     }
