@@ -1,7 +1,7 @@
 use pyo3::prelude::*;
 
 #[pyclass]
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct Matrix {
     pub elements: Vec<Vec<u8>>,
 }
@@ -56,7 +56,7 @@ impl Matrix {
         self.elements[row].iter().all(|&x| x == 0)
     }
 
-    pub fn echf_2(&mut self) -> (Self, Vec<(usize, usize)>) {
+    fn echelon_form_last_row(&mut self) -> (Self, Vec<(usize, usize)>) {
         let mut m_copy = self.copy();
         let mut last_row = m_copy.elements[m_copy.nrows() - 1].clone();
         let last_row_index = m_copy.nrows() - 1;
