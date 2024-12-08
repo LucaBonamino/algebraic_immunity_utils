@@ -144,7 +144,6 @@ impl Matrix {
         let mut free_columns: Vec<usize> = Vec::new();
         let mut row = 0;
 
-        // Identify pivot and free columns
         for j in 0..cols {
             if row < rows && self.elements[row][j] == 1 {
                 pivots.push(j);
@@ -154,12 +153,10 @@ impl Matrix {
             }
         }
 
-        // Construct kernel basis vectors
         for &free_col in &free_columns {
             let mut kernel_vector = vec![0; cols];
-            kernel_vector[free_col] = 1; // Set the free variable
+            kernel_vector[free_col] = 1;
 
-            // Compute dependent variables for each pivot column
             for &pivot_col in pivots.iter().rev() {
                 let mut sum = 0;
 
@@ -170,52 +167,6 @@ impl Matrix {
                 }
 
                 kernel_vector[pivot_col] = sum;
-            }
-
-
-            kernel_base.push(kernel_vector);
-        }
-
-        kernel_base
-    }
-
-
-
-    fn kernel2(&self)  -> Vec<Vec<u8>> {
-        let rows = self.nrows();
-        let cols = self.ncols();
-
-        let mut pivots: Vec<usize> = Vec::new();
-        let mut kernel_base: Vec<Vec<u8>> = Vec::new();
-        let mut free_columns : Vec<usize> = Vec::new();
-        let mut row = 0;
-
-        for j in 0..cols{
-            if row < rows && self.elements[row][j] == 1 {
-                pivots.push(j);
-                row += 1;
-            }
-            else {
-                free_columns.push(j);
-            }
-        }
-        println!("Pivot columns: {:?}", pivots);
-        println!("Free columns: {:?}", free_columns);
-
-        // Construct kernel basis vectors
-        for &free_col in &free_columns {
-            let mut kernel_vector = vec![0; cols];
-            kernel_vector[free_col] = 1; // Set the free variable
-
-            println!("Constructing kernel vector for free column {}", free_col);
-
-            for (i, &pivot_col) in pivots.iter().enumerate() {
-                // Sum all contributions from free columns in the same row
-                let mut sum = 0;
-                for &free_col in &free_columns {
-                    sum ^= self.elements[i][free_col]; // Add the element from the same row
-                }
-                kernel_vector[pivot_col] = sum; // Set the computed value for the pivot column
             }
 
 
