@@ -21,6 +21,10 @@ impl Matrix {
             .collect();
         format!("[{}]", rows.join(", "))
     }
+
+    fn to_list(&self) -> Vec<Vec<u8>> {
+        self.elements.clone()
+    }
     //
     fn nrows(&self) -> usize {
         self.elements.len()
@@ -112,6 +116,46 @@ impl Matrix {
         (m_copy, operations)
     }
 
+    fn row_echelon_full_matrix(&self) -> (Self, Vec<(usize, usize)>) {
+        let mut operations: Vec<(usize, usize)> = Vec::new();
+        let mut m_copy = self.copy();
+
+        for i in 0..usize::min(self.nrows(), self.ncols()) {
+            // Find the pivot in the current column (the first 1 in column i)
+            let mut pivot_row: Option<usize> = None;
+            for r in i..self.nrows() {
+                if m_copy.get(r, i) == 1 {
+                    pivot_row = Some(r);
+                    break;
+                }
+            }
+
+            // If no pivot is found, skip this column
+            if pivot_row.is_none() {
+                continue;
+            }
+            let pivot_row = pivot_row.unwrap();
+
+            // Swap the current row with the pivot row
+            if pivot_row != i {
+                m_copy.swap_rows(i, pivot_row);
+                operations.push((i, pivot_row));
+                operations.push((pivot_row, i));
+                operations.push((i, pivot_row));
+            }
+
+            // Eliminate all rows below the pivot
+            for j in (i + 1)..self.nrows() {
+                if m_copy.get(j, i) == 1 {
+                    m_copy.add_rows(j, i);
+                    operations.push((j, i));
+                }
+            }
+        }
+
+        (m_copy, operations)
+    }
+
     fn append_row(&mut self, v: Vec<u8>) {
         self.elements.push(v)
     }
@@ -162,7 +206,7 @@ impl Matrix {
 
                 for col in (0..cols).rev(){
                     if col != pivot_col {
-                        sum  = sum ^ self.elements[pivot_col][col] * kernel_vector[col]
+                        sum  = sum ^ (self.elements[pivot_col][col] * kernel_vector[col]);
                     }
                 }
 
