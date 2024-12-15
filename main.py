@@ -30,3 +30,9 @@ print(m.kernel())
 print()
 m = algebraic_immunity_utils.Matrix([[1,1,0], [0,1,1]])
 print(m.kernel())
+
+m = algebraic_immunity_utils.Matrix([[1,1,0], [1,0,1], [1,1,1]])
+print(m.row_echelon_full_matrix())
+print(m)
+
+print(m.to_list())
