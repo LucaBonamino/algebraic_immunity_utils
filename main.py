@@ -36,3 +36,7 @@ print(m.row_echelon_full_matrix())
 print(m)
 
 print(m.to_list())
+
+
+m = algebraic_immunity_utils.Matrix([[1,1,0,1], [0,0,1,0], [0,0,0,0]])
+print(m.rank())

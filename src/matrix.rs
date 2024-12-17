@@ -168,12 +168,15 @@ impl Matrix {
 
     fn rank(&self) -> usize {
         let mut count = 0;
+        let mut pivot_columns = std::collections::HashSet::new();
+
         for i in 0..self.nrows() {
             let p = Matrix::get_pivot(&self.elements[i]);
-            if p.is_none() {
-                break;
-            } else {
-                count += 1
+            if let Some(col) = p {
+
+                if pivot_columns.insert(col) {
+                    count += 1;
+                }
             }
         }
         count
