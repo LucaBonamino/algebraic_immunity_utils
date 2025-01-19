@@ -81,11 +81,14 @@ impl Matrix {
                     break;
                 } else {
                     let swap_index_un = swap_index.unwrap();
-                    m_copy.swap_rows(swap_index_un, swap_index_un + 1);
-                    operations.push((swap_index_un, swap_index_un+1));
-                    operations.push((swap_index_un+1, swap_index_un));
-                    operations.push((swap_index_un, swap_index_un+1));
-
+                    if !m_copy.is_zero_row(swap_index_un + 1) {
+                        m_copy.swap_rows(swap_index_un, swap_index_un + 1);
+                        operations.push((swap_index_un, swap_index_un + 1));
+                        operations.push((swap_index_un + 1, swap_index_un));
+                        operations.push((swap_index_un, swap_index_un + 1));
+                    } else {
+                        break;
+                    }
                 }
             } else {
                 let p_index = p_index.unwrap();

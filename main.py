@@ -51,3 +51,10 @@ m = algebraic_immunity_utils.Matrix([
 ec = m.echelon_form_last_row()
 print(ec[0])
 print(ec[1])
+
+
+
+m = algebraic_immunity_utils.Matrix([[1, 1, 1, 1], [0, 0, 0, 1], [0, 0, 0, 0], [1, 1, 1, 0]])
+ec = m.echelon_form_last_row()
+print(ec[0])
+print(ec[1])
