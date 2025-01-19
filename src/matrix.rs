@@ -69,51 +69,105 @@ impl Matrix {
         for _ in 0..m_copy.ncols() {
             let p_index = Matrix::get_pivot(&last_row);
             if p_index.is_none() {
-                break;
-            }
-            let p_index = p_index.unwrap();
-
-            let mut p_row: Option<Vec<u8>> = None;
-            let mut j_index: Option<usize> = None;
-
-            for j in 0..m_copy.nrows() - 1 {
-                if m_copy.get(j, p_index) == 1 && !(0..p_index).any(|k| m_copy.get(j, k) == 1) {
-                    p_row = Some(m_copy.elements[j].clone());
-                    j_index = Some(j);
+                let mut swap_index: Option<usize> = None;
+                for j in (0..m_copy.nrows() - 1).rev() {
+                    if m_copy.elements[j][j] == 0
+                        && Matrix::check_for_ones_in_row_after_index(&m_copy, j) == true
+                    {
+                        swap_index = Some(j);
+                    }
                 }
-            }
-
-            if p_row.is_none() {
-                if p_index == last_row_index {
-                    let mut swap_index_row: Option<usize> = None;
-                    for r in 0..m_copy.nrows() - 1 {
-                        if m_copy.is_zero_row(r) {
-                            swap_index_row = Some(r);
-                            break;
-                        }
-                    }
-
-                    if let Some(swap_index_row) = swap_index_row {
-                        m_copy.swap_rows(last_row_index, swap_index_row);
-                        operations.push((swap_index_row, last_row_index));
-                        operations.push((last_row_index, swap_index_row));
-                        operations.push((swap_index_row, last_row_index));
-                    }
+                if swap_index.is_none() {
                     break;
+                } else {
+                    let swap_index_un = swap_index.unwrap();
+                    m_copy.swap_rows(swap_index_un, swap_index_un + 1);
+                    operations.push((swap_index_un, swap_index_un+1));
+                    operations.push((swap_index_un+1, swap_index_un));
+                    operations.push((swap_index_un, swap_index_un+1));
+
                 }
-                m_copy.swap_rows(last_row_index, p_index);
-                last_row = m_copy.elements[last_row_index].clone();
-                operations.push((p_index, last_row_index));
-                operations.push((last_row_index, p_index));
-                operations.push((p_index, last_row_index));
-            } else if p_row.unwrap()[p_index] == 1 {
-                m_copy.add_rows(last_row_index, j_index.unwrap());
-                last_row = m_copy.elements[last_row_index].clone();
-                operations.push((last_row_index, j_index.unwrap()));
+            } else {
+                let p_index = p_index.unwrap();
+
+                let mut p_row: Option<Vec<u8>> = None;
+                let mut j_index: Option<usize> = None;
+                for j in 0..m_copy.nrows() - 1 {
+                    if m_copy.get(j, p_index) == 1 && !(0..p_index).any(|k| m_copy.get(j, k) == 1) {
+                        p_row = Some(m_copy.elements[j].clone());
+                        j_index = Some(j);
+                    }
+                }
+                if p_row.is_none() {
+                    if p_index == last_row_index {
+                        let mut swap_index_row: Option<usize> = None;
+                        for r in 0..m_copy.nrows() - 1 {
+                            if m_copy.is_zero_row(r) {
+                                swap_index_row = Some(r);
+                                break;
+                            }
+                        }
+
+                        if let Some(swap_index_row) = swap_index_row {
+                            m_copy.swap_rows(last_row_index, swap_index_row);
+                            operations.push((swap_index_row, last_row_index));
+                            operations.push((last_row_index, swap_index_row));
+                            operations.push((swap_index_row, last_row_index));
+                        }
+                        break;
+                    }
+                    m_copy.swap_rows(last_row_index, p_index);
+                    last_row = m_copy.elements[last_row_index].clone();
+                    operations.push((p_index, last_row_index));
+                    operations.push((last_row_index, p_index));
+                    operations.push((p_index, last_row_index));
+                } else if p_row.unwrap()[p_index] == 1 {
+                    m_copy.add_rows(last_row_index, j_index.unwrap());
+                    last_row = m_copy.elements[last_row_index].clone();
+                    operations.push((last_row_index, j_index.unwrap()));
+                }
             }
         }
 
         (m_copy, operations)
+    }
+
+    fn echelon_form(&self) -> (Matrix, Vec<(usize, usize)>) {
+        let mut m_copy = self.copy(); // Create a copy of the matrix
+        let mut row = 0;
+        let mut operations: Vec<(usize, usize)> = Vec::new();
+
+        for col in 0..self.ncols() {
+            // Find the pivot row
+            let mut pivot_row = None;
+            for r in row..self.nrows() {
+                if m_copy.elements[r][col] == 1 {
+                    pivot_row = Some(r);
+                    break;
+                }
+            }
+
+            if let Some(pivot_row_index) = pivot_row {
+                // Swap the current row with the pivot row
+                m_copy.swap_rows(row, pivot_row_index);
+                operations.push((row, pivot_row_index));
+                operations.push((pivot_row_index, row));
+                operations.push((row, pivot_row_index));
+
+                // Eliminate all other 1s in this column
+                for r in 0..self.nrows() {
+                    if r != row && m_copy.elements[r][col] == 1 {
+                        m_copy.add_rows(r, row); // Add the pivot row to eliminate the 1
+                        operations.push((r, row));
+                    }
+                }
+
+                // Move to the next row
+                row += 1;
+            }
+        }
+
+        (m_copy, operations) // Return the new matrix in echelon form
     }
 
     fn row_echelon_full_matrix(&self) -> (Self, Vec<(usize, usize)>) {
@@ -173,7 +227,6 @@ impl Matrix {
         for i in 0..self.nrows() {
             let p = Matrix::get_pivot(&self.elements[i]);
             if let Some(col) = p {
-
                 if pivot_columns.insert(col) {
                     count += 1;
                 }
@@ -207,15 +260,14 @@ impl Matrix {
             for &pivot_col in pivots.iter().rev() {
                 let mut sum = 0;
 
-                for col in (0..cols).rev(){
+                for col in (0..cols).rev() {
                     if col != pivot_col {
-                        sum  = sum ^ (self.elements[pivot_col][col] * kernel_vector[col]);
+                        sum = sum ^ (self.elements[pivot_col][col] * kernel_vector[col]);
                     }
                 }
 
                 kernel_vector[pivot_col] = sum;
             }
-
 
             kernel_base.push(kernel_vector);
         }
@@ -227,5 +279,11 @@ impl Matrix {
 impl Matrix {
     fn get_pivot(row: &Vec<u8>) -> Option<usize> {
         row.iter().position(|&x| x == 1)
+    }
+
+    fn check_for_ones_in_row_after_index(m_copy: &Matrix, row_index: usize) -> bool {
+        (0..m_copy.ncols())
+            .skip(row_index + 1)
+            .any(|k| m_copy.get(row_index, k) == 1)
     }
 }
