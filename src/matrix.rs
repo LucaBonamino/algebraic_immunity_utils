@@ -84,12 +84,38 @@ impl Matrix {
                     }
 
                 }
+                break;
+
             } else {
                 let p_index = p_index.unwrap();
 
                 let mut p_row: Option<Vec<u8>> = None;
                 let mut j_index: Option<usize> = None;
+                let mut distance_base = m_copy.nrows();
+                let mut closest: Option<usize> = None;
                 for j in 0..m_copy.nrows() - 1 {
+                    let piv: Option<usize> = Matrix::get_pivot(&m_copy.elements[j]);
+                    if piv.is_none() {
+                        if closest.is_none(){
+                            closest = Some(j);
+                        }
+                        break;
+                    }
+                    else {
+                        let piv_u = piv.unwrap();
+                        if piv_u == p_index {
+                            p_row = Some(m_copy.elements[j].clone());
+                            j_index = Some(j);
+                            break
+                        }
+                        else {
+                            let d: isize = piv_u as isize - p_index as isize;
+                            if 0 < d && (d as usize) < distance_base{
+                                closest = Some(j);
+                                distance_base = d as usize;
+                            }
+                        }
+                    }
                     if m_copy.get(j, p_index) == 1 && !(0..p_index).any(|k| m_copy.get(j, k) == 1) {
                         p_row = Some(m_copy.elements[j].clone());
                         j_index = Some(j);
@@ -113,11 +139,12 @@ impl Matrix {
                         }
                         break;
                     }
-                    m_copy.swap_rows(last_row_index, p_index);
+                    let closest_u = closest.unwrap();
+                    m_copy.swap_rows(last_row_index, closest_u);
                     last_row = m_copy.elements[last_row_index].clone();
-                    operations.push((p_index, last_row_index));
-                    operations.push((last_row_index, p_index));
-                    operations.push((p_index, last_row_index));
+                    operations.push((closest_u, last_row_index));
+                    operations.push((last_row_index, closest_u));
+                    operations.push((closest_u, last_row_index));
                 } else if p_row.unwrap()[p_index] == 1 {
                     m_copy.add_rows(last_row_index, j_index.unwrap());
                     last_row = m_copy.elements[last_row_index].clone();
