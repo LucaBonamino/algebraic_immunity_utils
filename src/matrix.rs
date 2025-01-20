@@ -69,26 +69,20 @@ impl Matrix {
         for _ in 0..m_copy.ncols() {
             let p_index = Matrix::get_pivot(&last_row);
             if p_index.is_none() {
-                let mut swap_index: Option<usize> = None;
-                for j in (0..m_copy.nrows() - 1).rev() {
-                    if m_copy.elements[j][j] == 0
-                        && Matrix::check_for_ones_in_row_after_index(&m_copy, j) == true
-                    {
-                        swap_index = Some(j);
+                for j in (1..self.nrows()).rev(){
+                    if m_copy.is_zero_row(j){
+                        continue;
                     }
-                }
-                if swap_index.is_none() {
-                    break;
-                } else {
-                    let swap_index_un = swap_index.unwrap();
-                    if !m_copy.is_zero_row(swap_index_un + 1) {
-                        m_copy.swap_rows(swap_index_un, swap_index_un + 1);
-                        operations.push((swap_index_un, swap_index_un + 1));
-                        operations.push((swap_index_un + 1, swap_index_un));
-                        operations.push((swap_index_un, swap_index_un + 1));
-                    } else {
-                        break;
+                    let curr_pivot = Matrix::get_pivot(&m_copy.elements[j]).unwrap();
+                    let prev_pivot = Matrix::get_pivot(&m_copy.elements[j-1]);
+                    if prev_pivot.is_none() || (!prev_pivot.is_none() && curr_pivot < prev_pivot.unwrap()) {
+                        m_copy.swap_rows(j, j-1);
+                        operations.push((j, j - 1));
+                        operations.push((j - 1, j));
+                        operations.push((j, j - 1));
+
                     }
+
                 }
             } else {
                 let p_index = p_index.unwrap();
