@@ -23,7 +23,6 @@ fn generate_binary_strings(n: usize) -> Vec<String> {
     binary_strings
 }
 
-// Perform the power operation on two binary strings
 fn str_ops(s1: &str, s2: &str) -> i32 {
     s1.chars()
         .zip(s2.chars())
@@ -35,7 +34,6 @@ fn str_ops(s1: &str, s2: &str) -> i32 {
         .product()
 }
 
-// Generate the matrix based on the binary strings
 fn generate_matrix(n: usize) -> Array2<i32> {
     let binary_strings = generate_binary_strings(n);
     let matrix_size = 2_usize.pow(n as u32);
@@ -51,7 +49,7 @@ fn generate_matrix(n: usize) -> Array2<i32> {
     matrix
 }
 
-// Pretty print the matrix
+
 fn pretty_print_matrix(matrix: &Array2<i32>) {
     for row in matrix.rows() {
         for val in row {
@@ -61,18 +59,15 @@ fn pretty_print_matrix(matrix: &Array2<i32>) {
     }
 }
 
-// Save the matrix to a binary file
 fn save_large_bit_matrix_bin(matrix: &Array2<i32>, filename: &str) {
     let rows = matrix.nrows() as u32;
     let cols = matrix.ncols() as u32;
 
     let mut file = BufWriter::new(File::create(filename).expect("Failed to create file"));
 
-    // Write dimensions as 32-bit integers
     file.write_all(&rows.to_le_bytes()).expect("Failed to write rows");
     file.write_all(&cols.to_le_bytes()).expect("Failed to write cols");
 
-    // Write the matrix data as a flat array of 32-bit integers
     let data = matrix.as_slice().expect("Failed to convert matrix to slice");
     for value in data {
         file.write_all(&value.to_le_bytes()).expect("Failed to write matrix data");
@@ -85,6 +80,4 @@ fn main() {
     let filename = format!("large_bit_matrix_{}.bin", size);
     save_large_bit_matrix_bin(&matrix, &filename);
 
-    // Uncomment to print the matrix to the console
-    // pretty_print_matrix(&matrix);
 }
