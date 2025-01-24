@@ -420,15 +420,15 @@ impl Matrix {
         let rows = self.nrows();
         let cols = self.ncols();
 
-        let mut pivots: Vec<usize> = Vec::new();
+        let mut pivots = std::collections::HashMap::new();
         let mut kernel_base: Vec<Vec<u8>> = Vec::new();
         let mut free_columns: Vec<usize> = Vec::new();
-        let mut row = 0;
+        let mut row_index = 0;
 
         for j in 0..cols {
-            if row < rows && self.elements[row][j] == 1 {
-                pivots.push(j);
-                row += 1;
+            if row_index < rows && self.elements[row_index][j] == 1 {
+                pivots.insert(j, row_index);
+                row_index += 1;
             } else {
                 free_columns.push(j);
             }
@@ -438,16 +438,16 @@ impl Matrix {
             let mut kernel_vector = vec![0; cols];
             kernel_vector[free_col] = 1;
 
-            for &pivot_col in pivots.iter().rev() {
+            for (&p_index, &p_row) in &pivots {
                 let mut sum = 0;
 
                 for col in (0..cols).rev() {
-                    if col != pivot_col {
-                        sum = sum ^ (self.elements[pivot_col][col] * kernel_vector[col]);
+                    if col != p_index {
+                        sum = sum ^ (self.elements[p_row][col] * kernel_vector[col]);
                     }
                 }
 
-                kernel_vector[pivot_col] = sum;
+                kernel_vector[p_index] = sum;
             }
 
             kernel_base.push(kernel_vector);
