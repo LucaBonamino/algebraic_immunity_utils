@@ -1,4 +1,3 @@
-use std::thread::current;
 use pyo3::prelude::*;
 
 #[pyclass]
@@ -13,6 +12,13 @@ impl Matrix {
     pub fn new(elements: Vec<Vec<u8>>) -> Self {
         Matrix { elements }
     }
+
+    pub fn get_sub_matrix(&self, start: usize, end: usize) -> Self {
+        Self {
+            elements: self.elements[start..end].to_vec(),
+        }
+    }
+
 
     pub fn __repr__(&self) -> String {
         let rows: Vec<String> = self
@@ -61,7 +67,7 @@ impl Matrix {
         self.elements[row].iter().all(|&x| x == 0)
     }
 
-    fn echelon_form_last_row2(&mut self) -> (Self, Vec<(usize, usize)>) {
+    fn echelon_form_last_row(&mut self) -> (Self, Vec<(usize, usize)>) {
         let mut m_copy = self.copy();
         let mut last_row = m_copy.elements[m_copy.nrows() - 1].clone();
         let last_row_index = m_copy.nrows() - 1;
@@ -76,13 +82,6 @@ impl Matrix {
                     }
                     let curr_pivot = Matrix::get_pivot(&m_copy.elements[j]).unwrap();
                     let prev_pivot = Matrix::get_pivot(&m_copy.elements[j - 1]);
-                    //println!("The number is {}\n",curr_pivot);
-                    //println!("{}", &m_copy.elements[j-1]);
-                    println!("The points are: {:?}", &m_copy.elements[j]);
-                    println!("The points are: {:?}", &m_copy.elements[j - 1]);
-                    if !prev_pivot.is_none(){
-                        println!("The number is {} {}\n",j, prev_pivot.unwrap());
-                    }
                     if prev_pivot.is_none()
                         || (!prev_pivot.is_none() && curr_pivot < prev_pivot.unwrap())
                     {
@@ -93,8 +92,6 @@ impl Matrix {
                     } else if !prev_pivot.is_none()
                         && (prev_pivot.unwrap() == curr_pivot)
                     {
-                        //println!(prev_pivot.unwrap());
-                        println!("The number is {}\n",curr_pivot);
                         // corner case: matrix self.elements[:-1][:-1] was not in echelon form due to the last appended column
                         m_copy.add_rows(j, j - 1);
                         operations.push((j, j - 1));
@@ -129,29 +126,8 @@ impl Matrix {
                             }
                         }
                     }
-                    //if m_copy.get(j, p_index) == 1 && !(0..p_index).any(|k| m_copy.get(j, k) == 1) {
-                    //    p_row = Some(m_copy.elements[j].clone());
-                    //    j_index = Some(j);
-                    //}
                 }
                 if p_row.is_none() {
-                    // if p_index == last_row_index {
-                    //     let mut swap_index_row: Option<usize> = None;
-                    //     for r in 0..m_copy.nrows() - 1 {
-                    //         if m_copy.is_zero_row(r) {
-                    //             swap_index_row = Some(r);
-                    //             break;
-                    //         }
-                    //     }
-                    //
-                    //     if let Some(swap_index_row) = swap_index_row {
-                    //         m_copy.swap_rows(last_row_index, swap_index_row);
-                    //         operations.push((swap_index_row, last_row_index));
-                    //         operations.push((last_row_index, swap_index_row));
-                    //         operations.push((swap_index_row, last_row_index));
-                    //     }
-                    //     break;
-                    // }
                     let closest_u = closest.unwrap();
                     m_copy.swap_rows(last_row_index, closest_u);
                     last_row = m_copy.elements[last_row_index].clone();
@@ -169,7 +145,7 @@ impl Matrix {
         (m_copy, operations)
     }
 
-    fn echelon_form_last_row(&mut self) -> (Self, Vec<(usize, usize)>) {
+    fn echelon_form_last_row_dep(&mut self) -> (Self, Vec<(usize, usize)>) {
         let mut m_copy = self.copy();
         let last_row_index = m_copy.nrows() - 1;
         let mut last_row = m_copy.elements[last_row_index].clone();
@@ -179,7 +155,6 @@ impl Matrix {
             let p_index = Matrix::get_pivot(&last_row);
 
             if p_index.is_none() {
-                //println!("{:?}", m_copy);
 
                 for row_index in (1..m_copy.nrows() - 1).rev() {
                     if m_copy.is_zero_row(row_index) {
@@ -257,7 +232,6 @@ impl Matrix {
         let mut operations: Vec<(usize, usize)> = Vec::new();
 
         for col in 0..self.ncols() {
-            // Find the pivot row
             let mut pivot_row = None;
             for r in row..self.nrows() {
                 if m_copy.elements[r][col] == 1 {
@@ -267,7 +241,7 @@ impl Matrix {
             }
 
             if let Some(pivot_row_index) = pivot_row {
-                // Swap the current row with the pivot row
+
                 m_copy.swap_rows(row, pivot_row_index);
                 operations.push((row, pivot_row_index));
                 operations.push((pivot_row_index, row));
@@ -276,54 +250,56 @@ impl Matrix {
                 // Eliminate all other 1s in this column
                 for r in 0..self.nrows() {
                     if r != row && m_copy.elements[r][col] == 1 {
-                        m_copy.add_rows(r, row); // Add the pivot row to eliminate the 1
+                        m_copy.add_rows(r, row);
                         operations.push((r, row));
                     }
                 }
 
-                // Move to the next row
+
                 row += 1;
             }
         }
 
-        (m_copy, operations) // Return the new matrix in echelon form
+        (m_copy, operations)
     }
 
     fn row_echelon_full_matrix(&self) -> (Self, Vec<(usize, usize)>) {
+        let mut m_copy = self.clone();
+        let rows = m_copy.nrows();
+        let cols = m_copy.ncols();
         let mut operations: Vec<(usize, usize)> = Vec::new();
-        let mut m_copy = self.copy();
+        let mut lead = 0;
 
-        for i in 0..usize::min(self.nrows(), self.ncols()) {
-            // Find the pivot in the current column (the first 1 in column i)
-            let mut pivot_row: Option<usize> = None;
-            for r in i..self.nrows() {
-                if m_copy.get(r, i) == 1 {
-                    pivot_row = Some(r);
-                    break;
+        for r in 0..rows {
+            if lead >= cols {
+                break;
+            }
+            let mut i = r;
+            while m_copy.elements[i][lead] == 0 {
+                i += 1;
+                if i == rows {
+                    i = r;
+                    lead += 1;
+                    if lead == cols {
+                        return (m_copy, operations);
+                    }
                 }
             }
-
-            // If no pivot is found, skip this column
-            if pivot_row.is_none() {
-                continue;
+            m_copy.swap_rows(r, i);
+            if r != i {
+                operations.push((r, i));
+                operations.push((i, r));
+                operations.push((r, i));
             }
-            let pivot_row = pivot_row.unwrap();
-
-            // Swap the current row with the pivot row
-            if pivot_row != i {
-                m_copy.swap_rows(i, pivot_row);
-                operations.push((i, pivot_row));
-                operations.push((pivot_row, i));
-                operations.push((i, pivot_row));
-            }
-
-            // Eliminate all rows below the pivot
-            for j in (i + 1)..self.nrows() {
-                if m_copy.get(j, i) == 1 {
-                    m_copy.add_rows(j, i);
-                    operations.push((j, i));
+            for i in 0..rows {
+                if i != r && m_copy.elements[i][lead] == 1 {
+                    for j in 0..cols {
+                        m_copy.elements[i][j] = (m_copy.elements[i][j] + m_copy.elements[r][j]) % 2;
+                    }
+                    operations.push((i, r));
                 }
             }
+            lead += 1;
         }
 
         (m_copy, operations)
@@ -358,15 +334,15 @@ impl Matrix {
         let rows = self.nrows();
         let cols = self.ncols();
 
-        let mut pivots: Vec<usize> = Vec::new();
+        let mut pivots = std::collections::HashMap::new();
         let mut kernel_base: Vec<Vec<u8>> = Vec::new();
         let mut free_columns: Vec<usize> = Vec::new();
-        let mut row = 0;
+        let mut row_index = 0;
 
         for j in 0..cols {
-            if row < rows && self.elements[row][j] == 1 {
-                pivots.push(j);
-                row += 1;
+            if row_index < rows && self.elements[row_index][j] == 1 {
+                pivots.insert(j, row_index);
+                row_index += 1;
             } else {
                 free_columns.push(j);
             }
@@ -376,16 +352,16 @@ impl Matrix {
             let mut kernel_vector = vec![0; cols];
             kernel_vector[free_col] = 1;
 
-            for &pivot_col in pivots.iter().rev() {
+            for (&p_index, &p_row) in &pivots {
                 let mut sum = 0;
 
                 for col in (0..cols).rev() {
-                    if col != pivot_col {
-                        sum = sum ^ (self.elements[pivot_col][col] * kernel_vector[col]);
+                    if col != p_index {
+                        sum = sum ^ (self.elements[p_row][col] * kernel_vector[col]);
                     }
                 }
 
-                kernel_vector[pivot_col] = sum;
+                kernel_vector[p_index] = sum;
             }
 
             kernel_base.push(kernel_vector);
@@ -398,11 +374,5 @@ impl Matrix {
 impl Matrix {
     fn get_pivot(row: &Vec<u8>) -> Option<usize> {
         row.iter().position(|&x| x == 1)
-    }
-
-    fn check_for_ones_in_row_after_index(m_copy: &Matrix, row_index: usize) -> bool {
-        (0..m_copy.ncols())
-            .skip(row_index + 1)
-            .any(|k| m_copy.get(row_index, k) == 1)
     }
 }
