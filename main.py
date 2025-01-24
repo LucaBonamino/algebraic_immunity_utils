@@ -123,3 +123,24 @@ print(ec[1])
 
 l = [[1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0, 0],
  [0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1, 0, 0], [0, 0, 1, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 1], [0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0], [0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 1], [0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1], [0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1], [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+def print_matrix(matrix):
+    for row in matrix:
+        print(" ".join(map(str, row)))
+
+
+import random
+
+n = 4
+M = [[random.randint(0,1) for _ in range(n)] for _ in range(n)]
+print_matrix(M)
+mr = algebraic_immunity_utils.Matrix(M)
+print()
+esc, ops = mr.row_echelon_full_matrix()
+print_matrix(esc.to_list())
+print(ops)
+
+
+print(mr.get_sub_matrix(0,2).to_list())
+
+

@@ -72,3 +72,6 @@ docs/_build/
 .python-version
 
 main_2.py
+
+large_bit_matrix.bin
+large_bit_matrix_*
