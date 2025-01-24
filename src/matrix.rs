@@ -295,60 +295,6 @@ impl Matrix {
         (m_copy, operations) // Return the new matrix in echelon form
     }
 
-    // fn row_echelon_full_matrix(&self) -> (Self, Vec<(usize, usize)>) {
-    //     let mut operations: Vec<(usize, usize)> = Vec::new();
-    //     let mut m_copy = self.copy();
-    //     let mut first = 0;
-    //
-    //     for r in 0..m_copy.nrows() {
-    //         let mut i = r.clone();
-    //         while m_copy.elements[i][first] == 0 {
-    //             i += 1;
-    //             if i == m_copy.nrows() {
-    //                 i = r;
-    //                 first = i;
-    //             }
-    //
-    //         }
-    //
-    //     }
-    //
-    //     for i in 0..usize::min(self.nrows(), self.ncols()) {
-    //         // Find the pivot in the current column (the first 1 in column i)
-    //         let mut pivot_row: Option<usize> = None;
-    //         for r in i..self.nrows() {
-    //             if m_copy.get(r, i) == 1 {
-    //                 pivot_row = Some(r);
-    //                 break;
-    //             }
-    //         }
-    //
-    //         // If no pivot is found, skip this column
-    //         if pivot_row.is_none() {
-    //             continue;
-    //         }
-    //         let pivot_row = pivot_row.unwrap();
-    //
-    //         // Swap the current row with the pivot row
-    //         if pivot_row != i {
-    //             m_copy.swap_rows(i, pivot_row);
-    //             operations.push((i, pivot_row));
-    //             operations.push((pivot_row, i));
-    //             operations.push((i, pivot_row));
-    //         }
-    //
-    //         // Eliminate all rows below the pivot
-    //         for j in (i + 1)..self.nrows() {
-    //             if m_copy.get(j, i) == 1 {
-    //                 m_copy.add_rows(j, i);
-    //                 operations.push((j, i));
-    //             }
-    //         }
-    //     }
-    //
-    //     (m_copy, operations)
-    // }
-
     fn row_echelon_full_matrix(&self) -> (Self, Vec<(usize, usize)>) {
         let mut m_copy = self.clone();
         let rows = m_copy.nrows();
