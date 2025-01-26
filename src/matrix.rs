@@ -459,47 +459,47 @@ fn apply_operations(operations: &Vec<(usize, usize)>, v: Vec<u8>) -> Vec<u8> {
 }
 
 
-fn is_submonomial(sub_monom: &str, monom: &str, check: Option<bool>) -> bool {
-    let check = check.unwrap_or(false);
-
-    if check {
-        assert_eq!(sub_monom.len(), monom.len(), "The lengths of sub_monom and monom must be equal");
-    }
-
-    for (char1, char2) in sub_monom.chars().zip(monom.chars()) {
-        if char1 > char2 {
-            return false;
-        }
-    }
-    true
-}
-
-fn verify(z: Vec<String>, g: Vec<u8>, mapping: Vec<String>, check: Option<bool>) -> (bool, Option<(usize, String)>) {
-    for (idx, item) in z.iter().enumerate() {
-        let anf: Vec<u8> = (0..g.len())
-            .filter(|&i| is_submonomial(&mapping[i], item, check))
-            .map(|i| g[i])
-            .collect();
-
-        if anf.iter().sum::<i32>() % 2 == 1 {
-            return (false, Some((idx, item.clone())));
-        }
-    }
-    (true, None)
-}
-
-fn verify_2(z: &[String], g: Vec<u8>, mapping: Vec<String>) -> (bool, Option<(usize, String)>) {
-    for (idx, item) in z.iter().enumerate() {
-        let sum: u32 = g.iter()
-            .enumerate()
-            .filter(|&(i, _)| is_submonomial(&mapping[i], item, false))
-            .map(|(_, &value)| value)
-            .sum() % 2;
-
-        if sum % 2 == 1 {
-            return (false, Some((idx, item.clone())));
-        }
-    }
-    (true, None)
-}
+// fn is_submonomial(sub_monom: &str, monom: &str, check: Option<bool>) -> bool {
+//     let check = check.unwrap_or(false);
+//
+//     if check {
+//         assert_eq!(sub_monom.len(), monom.len(), "The lengths of sub_monom and monom must be equal");
+//     }
+//
+//     for (char1, char2) in sub_monom.chars().zip(monom.chars()) {
+//         if char1 > char2 {
+//             return false;
+//         }
+//     }
+//     true
+// }
+//
+// fn verify(z: Vec<String>, g: Vec<u8>, mapping: Vec<String>, check: Option<bool>) -> (bool, Option<(usize, String)>) {
+//     for (idx, item) in z.iter().enumerate() {
+//         let anf: Vec<u8> = (0..g.len())
+//             .filter(|&i| is_submonomial(&mapping[i], item, check))
+//             .map(|i| g[i])
+//             .collect();
+//
+//         if anf.iter().sum::<i32>() % 2 == 1 {
+//             return (false, Some((idx, item.clone())));
+//         }
+//     }
+//     (true, None)
+// }
+//
+// fn verify_2(z: &[String], g: Vec<u8>, mapping: Vec<String>) -> (bool, Option<(usize, String)>) {
+//     for (idx, item) in z.iter().enumerate() {
+//         let sum: u32 = g.iter()
+//             .enumerate()
+//             .filter(|&(i, _)| is_submonomial(&mapping[i], item, false))
+//             .map(|(_, &value)| value)
+//             .sum() % 2;
+//
+//         if sum % 2 == 1 {
+//             return (false, Some((idx, item.clone())));
+//         }
+//     }
+//     (true, None)
+// }
 
