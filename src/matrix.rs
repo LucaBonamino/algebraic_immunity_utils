@@ -450,27 +450,6 @@ fn str_ops(s1: &str, s2: &str) -> i32 {
         .product()
 }
 
-pub fn compute_next<'a>(
-    mut v_previous: &'a mut Matrix,
-    monom_slice: Vec<&str>,
-    support_slice: Vec<&str>,
-    idx: usize,
-    operations: Vec<(usize, usize)>
-) -> &'a mut Matrix {
-    let row: Vec<u8>= (0..=idx)
-        .map(|i| str_ops(&support_slice[support_slice.len() - 1], monom_slice[i]) as u8)
-        .collect();
-    let column:Vec<u8> = (0..idx)
-        .map(|i| str_ops(&support_slice[i], monom_slice[monom_slice.len() - 1]) as u8)
-        .collect();
-
-    let n_vect: Vec<u8> = apply_operations(&operations, column);
-    v_previous.append_column(n_vect);
-    v_previous.append_row(row);
-
-    v_previous
-}
-
 fn apply_operations(operations: &Vec<(usize, usize)>, v: Vec<u8>) -> Vec<u8> {
     let mut result = v.clone();
     for &(op1, op2) in operations.iter() {
