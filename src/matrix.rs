@@ -1,5 +1,4 @@
 use pyo3::prelude::*;
-
 #[pyclass]
 #[derive(Clone)]
 pub struct Matrix {
@@ -67,13 +66,13 @@ impl Matrix {
         self.elements[row].iter().all(|&x| x == 0)
     }
 
-    fn echelon_form_last_row(&mut self) -> (Self, Vec<(usize, usize)>) {
+    fn reduced_echelon_form_last_row(&mut self) -> (Self, Vec<(usize, usize)>) {
         let mut m_copy = self.copy();
         let mut last_row = m_copy.elements[m_copy.nrows() - 1].clone();
         let last_row_index = m_copy.nrows() - 1;
         let mut operations = Vec::new();
 
-        for _ in 0..m_copy.ncols() {
+        for k in 0..m_copy.ncols() {
             let p_index = Matrix::get_pivot(&last_row);
             if p_index.is_none() {
                 for j in (1..m_copy.nrows()).rev() {
@@ -105,7 +104,7 @@ impl Matrix {
                 let mut j_index: Option<usize> = None;
                 let mut distance_base = m_copy.nrows();
                 let mut closest: Option<usize> = None;
-                for j in 0..m_copy.nrows() - 1 {
+                for j in k..m_copy.nrows() - 1 {
                     let piv: Option<usize> = Matrix::get_pivot(&m_copy.elements[j]);
                     if piv.is_none() {
                         if closest.is_none() {
@@ -127,17 +126,38 @@ impl Matrix {
                         }
                     }
                 }
+
                 if p_row.is_none() {
-                    let closest_u = closest.unwrap();
-                    m_copy.swap_rows(last_row_index, closest_u);
-                    last_row = m_copy.elements[last_row_index].clone();
-                    operations.push((closest_u, last_row_index));
-                    operations.push((last_row_index, closest_u));
-                    operations.push((closest_u, last_row_index));
+                    if !closest.is_none() {
+                        let closest_u = closest.unwrap();
+                        m_copy.swap_rows(last_row_index, closest_u);
+                        last_row = m_copy.elements[last_row_index].clone();
+                        operations.push((closest_u, last_row_index));
+                        operations.push((last_row_index, closest_u));
+                        operations.push((closest_u, last_row_index));
+                        println!("inverting")
+                    } else {
+                        for r in 0..m_copy.nrows() - 1 {
+                            if m_copy.elements[r][p_index] == 1 {
+                                m_copy.add_rows(r, p_index);
+                                operations.push((r, p_index));
+                            }
+                        }
+                    }
                 } else if p_row.unwrap()[p_index] == 1 {
                     m_copy.add_rows(last_row_index, j_index.unwrap());
                     last_row = m_copy.elements[last_row_index].clone();
                     operations.push((last_row_index, j_index.unwrap()));
+                    let new_pivot = Matrix::get_pivot(&m_copy.elements[last_row_index]);
+                    if !new_pivot.is_none() {
+                        let new_pivot_u = new_pivot.unwrap();
+                        for r in 0..m_copy.nrows() - 1 {
+                            if m_copy.elements[r][new_pivot_u] == 1 {
+                                m_copy.add_rows(r, last_row_index);
+                                operations.push((r, last_row_index));
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -155,7 +175,6 @@ impl Matrix {
             let p_index = Matrix::get_pivot(&last_row);
 
             if p_index.is_none() {
-
                 for row_index in (1..m_copy.nrows() - 1).rev() {
                     if m_copy.is_zero_row(row_index) {
                         continue;
@@ -241,7 +260,6 @@ impl Matrix {
             }
 
             if let Some(pivot_row_index) = pivot_row {
-
                 m_copy.swap_rows(row, pivot_row_index);
                 operations.push((row, pivot_row_index));
                 operations.push((pivot_row_index, row));
@@ -369,6 +387,40 @@ impl Matrix {
 
         kernel_base
     }
+
+    fn compute_next(
+        &self,
+        monom_slice: Vec<String>,
+        support_slice: Vec<String>,
+        idx: usize,
+        operations: Vec<(usize, usize)>
+    ) -> Self {
+        let mut m_copy = self.clone();
+        let row: Vec<u8> = (0..=idx)
+            .map(|i| str_ops(&support_slice[support_slice.len() - 1], &monom_slice[i]) as u8)
+            .collect();
+        let column: Vec<u8> = (0..idx)
+            .map(|i| str_ops(&support_slice[i], &monom_slice[monom_slice.len() - 1]) as u8)
+            .collect();
+
+        let n_vect: Vec<u8> = apply_operations(&operations, column);
+        m_copy.append_column(n_vect);
+        m_copy.append_row(row);
+
+        m_copy
+    }
+
+    fn construct_and_add_column(&self, support: Vec<String>, monom: String, operations: Vec<(usize, usize)>) -> Self {
+        let mut m_copy = self.clone();
+        let column: Vec<u8> = (0..m_copy.nrows())
+            .map(|i| str_ops(&support[i], &monom) as u8)
+            .collect();
+        let n_vect: Vec<u8> = apply_operations(&operations, column);
+        m_copy.append_column(n_vect);
+
+        m_copy
+    }
+
 }
 
 impl Matrix {
@@ -376,3 +428,76 @@ impl Matrix {
         row.iter().position(|&x| x == 1)
     }
 }
+
+
+fn add_to_vectors(mut v1: Vec<u8>, v2: Vec<u8>, size: usize) -> Vec<u8> {
+    for i in 0..size {
+        v1[i] ^= v2[i];
+    }
+    v1
+}
+
+fn str_ops(s1: &str, s2: &str) -> i32 {
+    s1.chars()
+        .zip(s2.chars())
+        .map(|(c1, c2)| {
+            let base = c1.to_digit(10).unwrap() as i32;
+            let exp = c2.to_digit(10).unwrap() as i32;
+            base.pow(exp as u32)
+        })
+        .product()
+}
+
+fn apply_operations(operations: &Vec<(usize, usize)>, v: Vec<u8>) -> Vec<u8> {
+    let mut result = v.clone();
+    for &(op1, op2) in operations.iter() {
+        result[op1] = (result[op1] + result[op2]) % 2;
+    }
+    result
+}
+
+
+// fn is_submonomial(sub_monom: &str, monom: &str, check: Option<bool>) -> bool {
+//     let check = check.unwrap_or(false);
+//
+//     if check {
+//         assert_eq!(sub_monom.len(), monom.len(), "The lengths of sub_monom and monom must be equal");
+//     }
+//
+//     for (char1, char2) in sub_monom.chars().zip(monom.chars()) {
+//         if char1 > char2 {
+//             return false;
+//         }
+//     }
+//     true
+// }
+//
+// fn verify(z: Vec<String>, g: Vec<u8>, mapping: Vec<String>, check: Option<bool>) -> (bool, Option<(usize, String)>) {
+//     for (idx, item) in z.iter().enumerate() {
+//         let anf: Vec<u8> = (0..g.len())
+//             .filter(|&i| is_submonomial(&mapping[i], item, check))
+//             .map(|i| g[i])
+//             .collect();
+//
+//         if anf.iter().sum::<i32>() % 2 == 1 {
+//             return (false, Some((idx, item.clone())));
+//         }
+//     }
+//     (true, None)
+// }
+//
+// fn verify_2(z: &[String], g: Vec<u8>, mapping: Vec<String>) -> (bool, Option<(usize, String)>) {
+//     for (idx, item) in z.iter().enumerate() {
+//         let sum: u32 = g.iter()
+//             .enumerate()
+//             .filter(|&(i, _)| is_submonomial(&mapping[i], item, false))
+//             .map(|(_, &value)| value)
+//             .sum() % 2;
+//
+//         if sum % 2 == 1 {
+//             return (false, Some((idx, item.clone())));
+//         }
+//     }
+//     (true, None)
+// }
+
