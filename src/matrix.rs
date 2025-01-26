@@ -1,6 +1,4 @@
 use pyo3::prelude::*;
-use serde::de::Unexpected::Option;
-
 #[pyclass]
 #[derive(Clone)]
 pub struct Matrix {
