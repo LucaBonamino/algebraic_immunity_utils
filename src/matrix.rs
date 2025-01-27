@@ -1,4 +1,6 @@
 use pyo3::prelude::*;
+use pyo3::wrap_pyfunction;
+
 #[pyclass]
 #[derive(Clone)]
 pub struct Matrix {
@@ -387,6 +389,17 @@ impl Matrix {
 
         kernel_base
     }
+    #[staticmethod]
+    fn compute_vandermonde(support: Vec<String>, monomials: Vec<String> ) -> Vec<Vec<u8>>{
+        let result: Vec<Vec<u8>> = support.iter()
+            .map(|zi| {
+                monomials.iter()
+                    .map(|ej| str_ops(&zi, &ej))
+                    .collect()
+            })
+            .collect();
+        result
+    }
 
     fn compute_next(
         &self,
@@ -421,6 +434,18 @@ impl Matrix {
         m_copy
     }
 
+    fn fill_rows(&self, support_slice: Vec<String>, monom_slice: Vec<String>) -> Self {
+        let mut m_copy = self.clone();
+        for j in 0..support_slice.len(){
+            let row: Vec<u8> = (0..monom_slice.len())
+                .map(|i| str_ops(&support_slice[j], &monom_slice[i]) as u8)
+                .collect();
+            m_copy.append_row(row)
+        }
+
+        m_copy
+    }
+
 }
 
 impl Matrix {
@@ -437,12 +462,12 @@ fn add_to_vectors(mut v1: Vec<u8>, v2: Vec<u8>, size: usize) -> Vec<u8> {
     v1
 }
 
-fn str_ops(s1: &str, s2: &str) -> i32 {
+fn str_ops(s1: &str, s2: &str) -> u8 {
     s1.chars()
         .zip(s2.chars())
         .map(|(c1, c2)| {
-            let base = c1.to_digit(10).unwrap() as i32;
-            let exp = c2.to_digit(10).unwrap() as i32;
+            let base = c1.to_digit(10).unwrap() as u8;
+            let exp = c2.to_digit(10).unwrap() as u8;
             base.pow(exp as u32)
         })
         .product()
@@ -457,47 +482,45 @@ fn apply_operations(operations: &Vec<(usize, usize)>, v: Vec<u8>) -> Vec<u8> {
 }
 
 
-// fn is_submonomial(sub_monom: &str, monom: &str, check: Option<bool>) -> bool {
-//     let check = check.unwrap_or(false);
-//
-//     if check {
-//         assert_eq!(sub_monom.len(), monom.len(), "The lengths of sub_monom and monom must be equal");
-//     }
-//
-//     for (char1, char2) in sub_monom.chars().zip(monom.chars()) {
-//         if char1 > char2 {
-//             return false;
-//         }
-//     }
-//     true
-// }
-//
-// fn verify(z: Vec<String>, g: Vec<u8>, mapping: Vec<String>, check: Option<bool>) -> (bool, Option<(usize, String)>) {
-//     for (idx, item) in z.iter().enumerate() {
-//         let anf: Vec<u8> = (0..g.len())
-//             .filter(|&i| is_submonomial(&mapping[i], item, check))
-//             .map(|i| g[i])
-//             .collect();
-//
-//         if anf.iter().sum::<i32>() % 2 == 1 {
-//             return (false, Some((idx, item.clone())));
-//         }
-//     }
-//     (true, None)
-// }
-//
-// fn verify_2(z: &[String], g: Vec<u8>, mapping: Vec<String>) -> (bool, Option<(usize, String)>) {
-//     for (idx, item) in z.iter().enumerate() {
-//         let sum: u32 = g.iter()
-//             .enumerate()
-//             .filter(|&(i, _)| is_submonomial(&mapping[i], item, false))
-//             .map(|(_, &value)| value)
-//             .sum() % 2;
-//
-//         if sum % 2 == 1 {
-//             return (false, Some((idx, item.clone())));
-//         }
-//     }
-//     (true, None)
-// }
+fn is_submonomial(sub_monom: &str, monom: &str) -> bool {
+    assert_eq!(sub_monom.len(), monom.len(), "The lengths of sub_monom and monom must be equal");
+
+    for (char1, char2) in sub_monom.chars().zip(monom.chars()) {
+        if char1 > char2 {
+            return false;
+        }
+    }
+    true
+}
+
+#[pyfunction]
+pub fn verify(z: Vec<String>, g: Vec<u8>, mapping: Vec<String>) -> (bool, Option<(usize, String)>) {
+    for (idx, item) in z.iter().enumerate() {
+        let anf: Vec<u8> = (0..g.len())
+            .filter(|&i| is_submonomial(&mapping[i], item))
+            .map(|i| g[i])
+            .collect();
+
+        if anf.iter().copied().sum::<u8>() % 2 == 1 {
+            return (false, Some((idx, item.clone())));
+        }
+    }
+    (true, None)
+}
+
+#[pyfunction]
+pub fn verify_2(z: Vec<String>, g: Vec<u8>, mapping: Vec<String>) -> (bool, Option<(usize, String)>) {
+    for (idx, item) in z.iter().enumerate() {
+        let sum: u8 = g.iter()
+            .enumerate()
+            .filter(|&(i, _)| is_submonomial(&mapping[i], item))
+            .map(|(_, &value)| value)
+            .sum::<u8>();
+
+        if sum % 2 == 1 {
+            return (false, Some((idx, item.clone())));
+        }
+    }
+    (true, None)
+}
 
