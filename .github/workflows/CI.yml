@@ -136,14 +136,8 @@ jobs:
           path: dist/macos/aarch64
 
       - name: Upload wheels to GitHub Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
-          files: |
-            dist/linux/x86_64/*.whl
-            dist/linux/aarch64/*.whl
-            dist/windows/x64/*.whl
-            dist/windows/x86/*.whl
-            dist/macos/x86_64/*.whl
-            dist/macos/aarch64/*.whl
+          files: dist/*.whl
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
