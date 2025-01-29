@@ -106,12 +106,13 @@ impl Matrix {
                 let mut j_index: Option<usize> = None;
                 let mut distance_base = m_copy.nrows();
                 let mut closest: Option<usize> = None;
-                for j in k..m_copy.nrows() - 1 {
+                for j in 0..m_copy.nrows() - 1 {
                     let piv: Option<usize> = Matrix::get_pivot(&m_copy.elements[j]);
                     if piv.is_none() {
-                        if closest.is_none() {
-                            closest = Some(j);
-                        }
+                        closest = Some(j);
+                        // if closest.is_none() {
+                        //     closest = Some(j);
+                        // }
                         break;
                     } else {
                         let piv_u = piv.unwrap();
@@ -121,9 +122,10 @@ impl Matrix {
                             break;
                         } else {
                             let d: isize = piv_u as isize - p_index as isize;
-                            if 0 < d && (d as usize) < distance_base {
+                            if 0 < d {
                                 closest = Some(j);
-                                distance_base = d as usize;
+                                //distance_base = d as usize;
+                                break
                             }
                         }
                     }
@@ -137,10 +139,11 @@ impl Matrix {
                         operations.push((closest_u, last_row_index));
                         operations.push((last_row_index, closest_u));
                         operations.push((closest_u, last_row_index));
-                        println!("inverting")
                     } else {
                         for r in 0..m_copy.nrows() - 1 {
-                            if m_copy.elements[r][p_index] == 1 {
+                            let piv_r = Matrix::get_pivot(&m_copy.elements[r]);
+
+                            if m_copy.elements[r][p_index] == 1 && piv_r.unwrap() < p_index{
                                 m_copy.add_rows(r, p_index);
                                 operations.push((r, p_index));
                             }
@@ -154,7 +157,12 @@ impl Matrix {
                     if !new_pivot.is_none() {
                         let new_pivot_u = new_pivot.unwrap();
                         for r in 0..m_copy.nrows() - 1 {
-                            if m_copy.elements[r][new_pivot_u] == 1 {
+                            let piv_r = Matrix::get_pivot(&m_copy.elements[r]);
+                            if piv_r.is_none() {
+                                continue;
+                            }
+                            let piv_r_u = piv_r.unwrap();
+                            if m_copy.elements[r][new_pivot_u] == 1 && piv_r_u < new_pivot_u {
                                 m_copy.add_rows(r, last_row_index);
                                 operations.push((r, last_row_index));
                             }

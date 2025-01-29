@@ -95,15 +95,53 @@ jobs:
     name: Release
     runs-on: ubuntu-latest
     if: ${{ startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch' }}
-    needs: [linux, windows, macos]
+    needs: [ linux, windows, macos ]
     steps:
-      - uses: actions/download-artifact@v4
+      - name: Download Linux x86_64 Wheels
+        uses: actions/download-artifact@v4
         with:
-          name: wheels-linux-${{ matrix.platform.target }}
-          path: dist
+          name: wheels-linux-x86_64
+          path: dist/linux/x86_64
+
+      - name: Download Linux aarch64 Wheels
+        uses: actions/download-artifact@v4
+        with:
+          name: wheels-linux-aarch64
+          path: dist/linux/aarch64
+
+      - name: Download Windows x64 Wheels
+        uses: actions/download-artifact@v4
+        with:
+          name: wheels-windows-x64
+          path: dist/windows/x64
+
+      - name: Download Windows x86 Wheels
+        uses: actions/download-artifact@v4
+        with:
+          name: wheels-windows-x86
+          path: dist/windows/x86
+
+      - name: Download macOS x86_64 Wheels
+        uses: actions/download-artifact@v4
+        with:
+          name: wheels-macos-x86_64
+          path: dist/macos/x86_64
+
+      - name: Download macOS aarch64 Wheels
+        uses: actions/download-artifact@v4
+        with:
+          name: wheels-macos-aarch64
+          path: dist/macos/aarch64
+
       - name: Upload wheels to GitHub Release
         uses: softprops/action-gh-release@v1
         with:
-          files: dist/*.whl
+          files: |
+            dist/linux/x86_64/*.whl
+            dist/linux/aarch64/*.whl
+            dist/windows/x64/*.whl
+            dist/windows/x86/*.whl
+            dist/macos/x86_64/*.whl
+            dist/macos/aarch64/*.whl
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
