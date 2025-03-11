@@ -104,17 +104,11 @@ jobs:
         with:
           path: dist  # Ensure all artifacts are placed in 'dist/'
 
-      - name: List files before moving
-        run: ls -lah dist/
-
       - name: Move all wheels and tar.gz files to dist/
         run: find dist/ -type f \( -name "*.whl" -o -name "*.tar.gz" \) -exec mv {} dist/ \;
 
       - name: Remove empty directories
         run: find dist/ -type d -empty -delete
-
-      - name: List dist files before publishing
-        run: ls -lah dist/
 
       - name: Upload wheels to GitHub Release
         uses: softprops/action-gh-release@v2
