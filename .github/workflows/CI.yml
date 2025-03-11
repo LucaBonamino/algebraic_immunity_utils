@@ -102,10 +102,13 @@ jobs:
       - name: Download all built wheels
         uses: actions/download-artifact@v4
         with:
-          path: dist
+          path: dist  # Ensure all artifacts are placed in 'dist/'
 
-      - name: Move wheels to root dist/
-        run: find dist/ -type f -name "*.whl" -exec mv {} dist/ \;
+      - name: Move all wheels and tar.gz files to dist/
+        run: find dist/ -type f \( -name "*.whl" -o -name "*.tar.gz" \) -exec mv {} dist/ \;
+
+      - name: Remove empty directories
+        run: find dist/ -type d -empty -delete
 
       - name: Upload wheels to GitHub Release
         uses: softprops/action-gh-release@v2
@@ -119,4 +122,5 @@ jobs:
         with:
           password: ${{ secrets.PYPI_API_TOKEN }}
           skip-existing: true
-          packages-dir: "dist"
+          packages-dir: "dist/"
+
