@@ -4,6 +4,9 @@ build-backend = "maturin"
 
 [project]
 name = "algebraic_immunity_utils"
+authors = [
+    { name = "LucaBonamino"}
+]
 requires-python = ">=3.6"
 classifiers = [
     "Programming Language :: Rust",
@@ -13,3 +16,7 @@ classifiers = [
 dynamic = ["version"]
 [tool.maturin]
 features = ["pyo3/extension-module"]
+
+[project.urls]
+Homepage = "https://github.com/LucaBonamino/algebraic_immunity_utils"
+Repository = "https://github.com/LucaBonamino/algebraic_immunity_utils"

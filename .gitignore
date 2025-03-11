@@ -75,3 +75,8 @@ tests/main_2.py
 
 large_bit_matrix.bin
 large_bit_matrix_*
+
+Cargo.lock
+
+tests/main_2.py
+tests/main.py
