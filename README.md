@@ -4,5 +4,5 @@ For the moment, the source code in this repository has been copied to <a href='h
 
 ## Installation
 
-<code>pip install algebraic_immunity_utils</code>.
+<code>pip install algebraic_immunity_utils</code>
 
