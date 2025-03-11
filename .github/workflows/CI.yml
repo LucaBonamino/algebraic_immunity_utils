@@ -99,46 +99,24 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Download Linux x86_64 Wheels
+      - name: Download all built wheels
         uses: actions/download-artifact@v4
         with:
-          name: wheels-linux-x86_64
-          path: dist/linux/x86_64
+          path: dist
 
-      - name: Download Linux aarch64 Wheels
-        uses: actions/download-artifact@v4
-        with:
-          name: wheels-linux-aarch64
-          path: dist/linux/aarch64
+      - name: Move wheels to root dist/
+        run: find dist/ -type f -name "*.whl" -exec mv {} dist/ \;
 
-      - name: Download Windows x64 Wheels
-        uses: actions/download-artifact@v4
-        with:
-          name: wheels-windows-x64
-          path: dist/windows/x64
+      - name: Build source distribution
+        run: python -m pip install build && python -m build --sdist
 
-      - name: Download Windows x86 Wheels
-        uses: actions/download-artifact@v4
-        with:
-          name: wheels-windows-x86
-          path: dist/windows/x86
-
-      - name: Download macOS x86_64 Wheels
-        uses: actions/download-artifact@v4
-        with:
-          name: wheels-macos-x86_64
-          path: dist/macos/x86_64
-
-      - name: Download macOS aarch64 Wheels
-        uses: actions/download-artifact@v4
-        with:
-          name: wheels-macos-aarch64
-          path: dist/macos/aarch64
+      - name: List dist files
+        run: ls -R dist/
 
       - name: Upload wheels to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: dist/**/*.whl
+          files: dist/*.whl
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -147,3 +125,4 @@ jobs:
         with:
           password: ${{ secrets.PYPI_API_TOKEN }}
           skip-existing: true
+          packages-dir: "dist"
