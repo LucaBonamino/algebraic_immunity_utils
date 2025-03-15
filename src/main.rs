@@ -50,14 +50,6 @@ fn generate_matrix(n: usize) -> Array2<i32> {
 }
 
 
-fn pretty_print_matrix(matrix: &Array2<i32>) {
-    for row in matrix.rows() {
-        for val in row {
-            print!("{:5} ", val);
-        }
-        println!();
-    }
-}
 
 fn save_large_bit_matrix_bin(matrix: &Array2<i32>, filename: &str) {
     let rows = matrix.nrows() as u32;
