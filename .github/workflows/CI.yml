@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - master
+      - updatePyO3
     tags:
       - '*'
   pull_request:
