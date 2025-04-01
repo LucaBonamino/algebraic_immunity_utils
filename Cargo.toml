@@ -1,6 +1,6 @@
 [package]
 name = "algebraic_immunity_utils"
-version = "1.5.2"
+version = "1.6.0"
 edition = "2021"
 authors = ["LucaBonamino"]
 license = "MIT"
